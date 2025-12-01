@@ -43,6 +43,8 @@ session_start();
 <?php
 include("../db/connection.php");
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 if (isset($_POST['login'])) 
 {
     $email = $_POST['email'];
@@ -50,26 +52,35 @@ if (isset($_POST['login']))
 
     if($email != "" && $password != "")
     {
-        $check = mysqli_query($connection, 
-                "SELECT * FROM users WHERE email='$email' LIMIT 1");
+        try{
+            $stmt = $connection->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
 
-        if (mysqli_num_rows($check) == 1)
-        {
-            $row = mysqli_fetch_assoc($check);
-            $hashedPassword = $row['password'];
-            if (password_verify($password, $hashedPassword)) {               
-                // Login success
-                $_SESSION['username'] = $email;
-                header("Location: ../welcome/welcome.php?email=$email");
-                exit();
+            $result = $stmt->get_result();
 
-            } else {
-                echo "<script>alert('Invalid password');</script>";
+            if ($result->num_rows == 1)
+            {
+                $row = $result->fetch_assoc();
+                $hashedPassword = $row['password'];
+                if (password_verify($password, $hashedPassword)) {               
+                    // Login success
+                    $_SESSION['username'] = $email;
+                    header("Location: ../welcome/welcome.php?email=$email");
+                    exit();
+
+                } else {
+                    echo "<script>alert('Invalid password');</script>";
+                }
+            }
+            else 
+            {
+                echo "<script>alert('Email not found');</script>";
             }
         }
-        else 
-        {
-            echo "<script>alert('Email not found');</script>";
+        catch (mysqli_sql_exception $e) {
+            // catch db errors
+            echo "Database error: " . $e->getMessage();
         }
     }
     else

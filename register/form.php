@@ -53,42 +53,54 @@
 <?php
 include("../db/connection.php");
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 if (isset($_POST['register'])) 
 {
-    $name = $_POST['name'];
-    $phone = $_POST['phone'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $cpassword = $_POST['cpassword'];
+    try{
+        $name = $_POST['name'];
+        $phone = $_POST['phone'];
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $cpassword = $_POST['cpassword'];
 
-    if($name != "" && $phone != "" && $email !="" && $password != "" && $cpassword != "")
-    {
-        //check if email already exists
-        $check = mysqli_query($connection, "SELECT * FROM users WHERE email = '$email'");
-
-        if (mysqli_num_rows($check) > 0)
+        if($name != "" && $phone != "" && $email !="" && $password != "" && $cpassword != "")
         {
-            echo "<script>alert('User already registered');</script>";
-        }
-        //after registering redirect to login page
-        else{
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $query = "INSERT INTO users (name, phone, email, password) VALUES ('$name', '$phone', '$email', '$hashedPassword')";
-            $data = mysqli_query($connection, $query);
+            //check if email already exists
+            $stmt = $connection->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-            if ($data) {
-                header("Location: ../login/login.php?msg=registered");
-                exit();
-            }
-            else
+            if ($result->num_rows >> 0)
             {
-                echo " Data insertion failed";
-            }   
-        }        
+                echo "<script>alert('User already registered');</script>";
+            }
+            //after registering redirect to login page
+            else{
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $connection->prepare(
+                    "INSERT INTO users (name, phone, email, password) VALUES (?, ?, ?, ?)"
+                );
+                $stmt->bind_param("ssss", $name, $phone, $email, $hashedPassword);
+                if ($stmt->execute()) {
+                    header("Location: ../login/login.php?msg=registered");
+                    exit();
+                } 
+                else
+                {
+                    echo " Data insertion failed";
+                }   
+            }        
+        }
+        else
+        {
+            echo "Please fill the form";
+        }
     }
-    else
-    {
-        echo "Please fill the form";
+    catch (mysqli_sql_exception $e) {
+        // Catch any MySQLi errors
+        echo "Database error: " . $e->getMessage();
     }
 }
 ?>
