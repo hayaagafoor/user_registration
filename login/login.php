@@ -51,17 +51,25 @@ if (isset($_POST['login']))
     if($email != "" && $password != "")
     {
         $check = mysqli_query($connection, 
-                "SELECT * FROM users WHERE email='$email' AND password='$password'");
+                "SELECT * FROM users WHERE email='$email' LIMIT 1");
 
         if (mysqli_num_rows($check) == 1)
         {
-            $_SESSION['username']=$email;
-            header("Location: ../welcome/welcome.php?email=$email");
-            exit();
+            $row = mysqli_fetch_assoc($check);
+            $hashedPassword = $row['password'];
+            if (password_verify($password, $hashedPassword)) {               
+                // Login success
+                $_SESSION['username'] = $email;
+                header("Location: ../welcome/welcome.php?email=$email");
+                exit();
+
+            } else {
+                echo "<script>alert('Invalid password');</script>";
+            }
         }
-        else
+        else 
         {
-            echo "<script>alert('Invalid email or password');</script>";
+            echo "<script>alert('Email not found');</script>";
         }
     }
     else

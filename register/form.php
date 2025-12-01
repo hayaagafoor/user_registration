@@ -63,16 +63,17 @@ if (isset($_POST['register']))
 
     if($name != "" && $phone != "" && $email !="" && $password != "" && $cpassword != "")
     {
-        // 1. Check if email already exists
+        //check if email already exists
         $check = mysqli_query($connection, "SELECT * FROM users WHERE email = '$email'");
 
         if (mysqli_num_rows($check) > 0)
         {
             echo "<script>alert('User already registered');</script>";
         }
+        //after registering redirect to login page
         else{
-            $query = "INSERT INTO users (name, phone, email, password, cpassword) VALUES ('$name', '$phone', '$email', '$password', '$cpassword')";
-
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $query = "INSERT INTO users (name, phone, email, password) VALUES ('$name', '$phone', '$email', '$hashedPassword')";
             $data = mysqli_query($connection, $query);
 
             if ($data) {

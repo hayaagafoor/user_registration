@@ -14,11 +14,12 @@ document.addEventListener("DOMContentLoaded", function () {
         let password = document.getElementById("password").value;
         let cpassword = document.getElementById("cpassword").value;
 
+        //name shouldn't be empty
         if (name === "") {
             document.getElementById("nameError").textContent = "Name is required";
             valid = false;
         }
-
+        //phone number validation
         if (!/^[0-9]{10}$/.test(phone)) {
             document.getElementById("phoneError").textContent = "Phone number must be exactly 10 digits";
             valid = false;
@@ -28,13 +29,13 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("phoneError").textContent = "Phone number must start with 6, 7, 8, or 9";
             valid = false;
         }
-
+        //email validation
         let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(email)) {
             document.getElementById("emailError").textContent = "Enter a valid email address";
             valid = false;
         }
-
+        //password matching
         if (password !== cpassword) {
             document.getElementById("passwordError").textContent = "Passwords do not match";
             valid = false;
